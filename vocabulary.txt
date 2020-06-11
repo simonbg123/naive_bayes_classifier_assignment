@@ -73,7 +73,6 @@ across
 acs
 act
 action
-action.’
 actionable
 actions
 active
@@ -379,7 +378,6 @@ any
 anychart
 anymore
 anyone
-anyone’
 anything
 anyways
 apache
@@ -456,7 +454,6 @@ areas
 aren't
 arendt
 aren’t
-are”
 argentina
 arguments
 aria
@@ -477,13 +474,11 @@ arrived
 arrow
 ars
 art
-art.”
 article
 articles
 artificial
 artists
 artwork
-art’
 aruba
 as
 asana
@@ -612,6 +607,7 @@ automl
 automobile
 autonomous
 autonomously
+autonomy
 autopilot
 autosuggest
 available
@@ -756,7 +752,7 @@ bds
 be
 beach
 beam
-beast”
+beast
 beat
 beating
 beautiful
@@ -903,7 +899,6 @@ bitrise
 bits
 bitsplitting.org
 bitstamp
-bits”
 bitwarden
 bizspark
 black
@@ -965,7 +960,6 @@ boat
 bob
 bocuse
 bodies
-bodies’
 body
 boeing
 boilerplate
@@ -1015,7 +1009,7 @@ bots
 bottle
 bottled
 bottleneck
-bottom’
+bottom
 boundaries
 boundary
 bounty
@@ -1053,8 +1047,8 @@ breached
 breaches
 break
 breakdown
+breaker
 breakers
-breaker”
 breakfast
 breaking
 breaks
@@ -1064,7 +1058,7 @@ brexit
 brick
 brick-and-mortar
 bricks
-bride”
+bride
 bridge
 bridges
 brief
@@ -1078,6 +1072,7 @@ brings
 bringup
 briskbard
 brisket
+bristlecone
 britain
 british
 bro
@@ -1129,6 +1124,7 @@ bull
 bullet
 bullish
 bullshit
+bully
 bundle
 bundling
 bunny
@@ -1153,7 +1149,6 @@ but
 buterin
 button
 buy
-buy?”
 buyers
 buying
 buys
@@ -1233,7 +1228,7 @@ candidates
 candies
 cannabinoid
 cannabis
-cannons’
+cannons
 cannot
 canonical
 canvasrenderer
@@ -1248,7 +1243,6 @@ caprine
 caps
 capsule
 capsules
-capsules”
 captcha
 captive
 capture
@@ -1576,7 +1570,6 @@ cockroachdb
 coco
 codacy
 code
-code?”
 codebase
 codeburst
 codec
@@ -1920,6 +1913,7 @@ cppcon
 cpu
 cpus
 cqrs
+crab-like
 crack
 crackdown
 cracked
@@ -2001,7 +1995,6 @@ cryptoassets
 cryptocoins
 cryptocontrol
 cryptocurrencies
-cryptocurrencies”
 cryptocurrency
 cryptoeconomics
 cryptographic
@@ -2014,7 +2007,6 @@ cryptopia
 cryptopop
 cryptos
 cryptotrading
-crypto”
 crystal
 crystalizing
 cs
@@ -2066,7 +2058,9 @@ cv
 cvs
 cyber
 cyber-attack
+cyber-meddling
 cyber-security
+cyber-warriors
 cyberattack
 cybercrime
 cybergibbons
@@ -2075,6 +2069,7 @@ cycle
 cyclops
 cynbe
 czochralski
+d
 d-cnn
 da
 dabble
@@ -2248,13 +2243,12 @@ demo
 democracy
 democrat
 democratic
-democrats’
+democrats
 demonstration
 demystified
 dengan
 denials
 denied
-denied”
 denmark
 deno
 denon-marantz
@@ -2301,7 +2295,6 @@ desk
 desktop
 desktop-based
 desktops
-desktop”
 despite
 destination
 destiny
@@ -2329,7 +2322,6 @@ developed
 developer
 developerhub.io
 developers
-developer”
 developing
 development
 developmental
@@ -2520,6 +2512,7 @@ dog
 dog-walking
 doge
 dogs
+doh
 doing
 doj
 dojo
@@ -2630,7 +2623,7 @@ due
 duefocus
 duff
 duit
-dulwich”
+dulwich
 dumb
 dumber
 dump
@@ -2641,7 +2634,6 @@ durable
 durant
 during
 dust
-dust,’
 dwarf
 dweb
 dying
@@ -2791,7 +2783,6 @@ embody
 embracing
 emerge
 emergency
-emergency,’
 emerging
 emissions
 emmanuel
@@ -2826,6 +2817,7 @@ encrypt
 encrypting
 encryption
 encrypts
+encyclopedia
 end
 end-to-end
 endangered
@@ -2850,7 +2842,6 @@ engineered
 engineering
 engineering-as-marketing
 engineers
-engineers’
 engines
 england
 english
@@ -2909,7 +2900,6 @@ erlang
 errol
 error
 errors
-error”
 ersatz
 eruption
 esa
@@ -2953,7 +2943,6 @@ euler
 europe
 european
 europeans
-europe’
 eurovision
 euv
 evacuation
@@ -2974,7 +2963,6 @@ everyday
 everydollar
 everyone
 everything
-everything”
 everywhere
 evicted
 evidence
@@ -3047,7 +3035,6 @@ expenses
 expensive
 experience
 experiences
-experience’
 experiencing
 experiment
 experimental
@@ -3073,6 +3060,7 @@ exploiting
 exploits
 explorable
 exploration
+exploratory
 explore
 explores
 exploring
@@ -3080,7 +3068,7 @@ explosion
 explosives
 expo
 exponential
-exponentially,’
+exponentially
 export
 exporter
 exposed
@@ -3122,7 +3110,6 @@ face
 facebook
 facebook.com
 facebooks
-facebook”
 faces
 facial
 facilitating
@@ -3286,7 +3273,6 @@ filings
 fill
 film
 films
-film”
 filter
 filtering
 filters
@@ -3425,7 +3411,6 @@ foretells
 forever
 forever-ish
 foreveraloneprogramming
-forever’
 forgery
 forget
 forgetting
@@ -3527,7 +3512,7 @@ ft
 ftc
 ftp
 fuchsia
-fuck”
+fuck
 fud
 fudge
 fuel
@@ -3588,6 +3573,7 @@ galloway
 gamasutra
 gambling
 game
+game-changer
 game-playing
 gamecube
 games
@@ -3597,7 +3583,6 @@ gaming
 gans
 gap
 gaping
-gap’
 garage
 garbage
 garfield
@@ -3819,8 +3804,11 @@ grey
 grid
 grids
 grief
+grievance
 grim
+grin
 grip
+grit
 groceries
 grok
 ground
@@ -3852,7 +3840,6 @@ guide
 guidelines
 guido
 guilty
-guilty,’
 guinea
 guitar
 guixsd
@@ -3922,7 +3909,6 @@ happiest
 happiness
 happy
 happygrumpy
-happy”
 haproxy
 harari
 harassment
@@ -3981,7 +3967,7 @@ headset
 headsets
 headtracking
 health
-healthcare”
+healthcare
 healthchecks
 healthier
 healthy
@@ -4025,13 +4011,12 @@ her
 herbal
 herbivore
 here
-here’
 heritability
 hero
 heroku
 herpes
 hers
-hess’
+hess
 heterogeneous
 heyday
 hickey
@@ -4083,7 +4068,6 @@ historians
 historic
 historical
 history
-history”
 hit
 hitler
 hitlist
@@ -4199,6 +4183,7 @@ hunting
 hunts
 hurt
 hurts
+hustle
 hut
 hwy
 hybrid
@@ -4246,15 +4231,13 @@ identified
 identifiers
 identify
 identifying
-identities”
+identities
 identity
-identity’
 ideological
 idiot
 idq
 idris
 ids
-id”
 ietf
 if
 ifixits
@@ -4387,7 +4370,6 @@ induction
 industrial
 industry
 inequality
-inequality’
 inexperienced
 infected
 infecting
@@ -4427,6 +4409,7 @@ innovation
 innovations
 innovative
 inoovi
+inprivate
 input
 inputs
 insane
@@ -4501,7 +4484,6 @@ international
 internationalization
 internationally
 internet
-internet”
 internship
 interoperability
 interoute
@@ -4604,7 +4586,6 @@ issue
 issues
 issuing
 it
-it.’
 iter
 iteration
 itopography
@@ -4634,7 +4615,6 @@ japan
 japanese
 jared
 jason
-jason?”
 java
 javascript
 jazz
@@ -4872,7 +4852,6 @@ lang
 language
 language-based
 languages
-language”
 lapd
 laptop
 laptops
@@ -5025,7 +5004,6 @@ lifecycle
 lifehacks
 lifelike
 lifestyle
-life”
 lift
 liftbridge
 lifts
@@ -5038,7 +5016,6 @@ lightning
 lightning-fast
 lights
 lightweight
-light”
 like
 liked
 likely
@@ -5157,7 +5134,6 @@ lookout
 looks
 loop
 loops
-loop”
 lord
 lore.kernel.org
 lorenzo-lochbaum
@@ -5259,14 +5235,12 @@ maintained
 maintainers
 maintaining
 maintenance
-maintenance”
 major
 majors
 make
 maker
 makerlog
 makers
-makers’
 makes
 making
 malawi
@@ -5303,7 +5277,6 @@ manufacturer
 manufacturing
 manuscript
 many
-man”
 map
 mapd
 mapme
@@ -5554,7 +5527,6 @@ mindless
 minds
 mindstorms
 mind–body
-mind”
 mine
 minecraft
 miner
@@ -5581,13 +5553,12 @@ miracle
 mirai
 mirror
 mirrorless
-mirror”
 miserable
 misery
 misfortune
 misguided
 misinfodemics
-misinformation”
+misinformation
 misleading
 misled
 misp
@@ -5684,6 +5655,7 @@ moore
 moq
 moral
 more
+morning
 morris
 mortar
 mortem
@@ -5839,6 +5811,7 @@ neither
 neo-banks
 neo-nazis
 neon
+neonic
 nerd
 nest
 net
@@ -5907,6 +5880,7 @@ nlu
 nmap
 nnef
 no
+no-go
 no-show
 noah
 nobody
@@ -6000,7 +5974,6 @@ nutty
 nvidia
 nxmh
 nyc
-n’
 o
 o'connor
 o'reilly
@@ -6050,6 +6023,7 @@ offic
 office
 official
 officials
+offline
 offshore
 often
 ogrep
@@ -6083,7 +6057,6 @@ one
 one-vs-all
 onechronos
 ones
-one”
 ongoing
 onion
 online
@@ -6181,7 +6154,6 @@ origins
 orthoprint
 os
 os-release
-os?”
 oscar-shortlisted
 oshwah
 osint
@@ -6211,7 +6183,6 @@ output
 outside
 outside-in
 outsourced
-out”
 ovale.io
 oven
 over
@@ -6228,7 +6199,7 @@ overheated
 overly
 overnight
 overstock
-overstory’
+overstory
 overtakes
 overwhelmed
 ow
@@ -6264,7 +6235,6 @@ paddy
 pads
 page
 pages
-pages”
 paid
 pain
 paine
@@ -6287,7 +6257,6 @@ panoptispy:characterizing
 panorama
 paper
 papers
-paper”
 papyrus
 paquete
 parachute
@@ -6297,7 +6266,7 @@ paradox
 parallel
 parallelisation
 parallelism
-paralysis”
+paralysis
 paralyzing
 parameter
 parameters
@@ -6341,7 +6310,6 @@ password
 passwords
 passé
 past
-past”
 patagonia
 patch
 patching
@@ -6445,7 +6413,6 @@ pgbouncer
 phantom
 pharma
 phase
-phase’
 phd
 phelps
 phenomenon
@@ -6457,7 +6424,6 @@ philosophers
 philosophy
 phishing
 phoenix
-phoenix”
 phone
 phone-calling
 phones
@@ -6485,6 +6451,7 @@ pi
 piaggio
 piano
 pick
+pickers
 picking
 picks
 pictures
@@ -6631,7 +6598,8 @@ popcorn
 popular
 population
 populations
-porn”
+porch
+porn
 port
 portability
 portable
@@ -6653,6 +6621,7 @@ post-exploitation
 post-guido
 post-janus
 post-lehman
+post-millennials
 post-outrage
 post-password
 postal
@@ -6804,6 +6773,7 @@ productivity
 products
 prof
 professional
+professionally
 professor
 professors
 profile
@@ -6814,11 +6784,10 @@ profitable
 profits
 program
 programing
-programmed”
+programmed
 programmer
 programmers
 programming
-programming”
 programs
 progress
 progression
@@ -6933,7 +6902,6 @@ pursuit
 push
 pushed
 pushing
-push”
 put
 putih
 putin
@@ -7007,7 +6975,6 @@ racist
 rack
 racket
 radar
-radar”
 radeon
 radiation
 radical
@@ -7024,6 +6991,7 @@ railgun
 railroad
 railroaded
 rails
+rain
 rainbow
 rainforest
 raise
@@ -7279,7 +7247,7 @@ rental
 rents
 rené
 renée
-reorganisation’
+reorganisation
 reorganize
 repair
 repeal
@@ -7440,7 +7408,6 @@ rift
 right
 right-wing
 rights
-right”
 rigs
 ringer
 rings
@@ -7477,6 +7444,7 @@ robotic
 robotics
 robots
 robust
+rock
 rocket
 rockets
 rockstar
@@ -7525,6 +7493,7 @@ rs
 rsa
 rscomponents
 rss
+rsync”-command
 rtx
 ru
 rubber
@@ -7634,7 +7603,6 @@ scanning
 scans
 scarcity
 scared
-scared’
 scattershot
 sccs
 scenario
@@ -7668,7 +7636,6 @@ scope
 scoped
 scoping
 scores
-scores”
 scott
 scottish
 scotus
@@ -7744,6 +7711,7 @@ seeks
 seems
 seen
 sees
+segmentsmack
 segregation
 segy
 seinfeld
@@ -7868,7 +7836,7 @@ sharp-edged
 sharper
 sharpkeys
 sharply
-sharpshooter’
+sharpshooter
 sharpton
 shawn
 shed
@@ -7927,6 +7895,7 @@ shots
 should
 shouldn’t
 shouting
+shovel-ready
 show
 showed
 showerthoughts
@@ -7989,6 +7958,7 @@ simulation
 simulations
 simulator
 simulink
+sin
 sinaloa
 sinatra
 since
@@ -8014,6 +7984,7 @@ situations
 six
 size
 sizes
+skam
 skepticism
 skeptics
 sketch
@@ -8107,7 +8078,7 @@ social
 social-credit
 socialism
 socialist
-socialize.”
+socialize
 socializing
 socially
 society
@@ -8165,7 +8136,6 @@ souls
 sound
 soundtracks
 soup
-soup”
 source
 sourced
 sourceforge
@@ -8188,7 +8158,6 @@ spaceship
 spaceship-prompt
 spacewar
 spacex
-space”
 spam
 span
 spare
@@ -8330,7 +8299,6 @@ startup
 startupmate
 startuppers
 startups
-startup”
 starving
 stat
 state
@@ -8389,7 +8357,6 @@ stop
 stopped
 stopping
 stops
-stops’
 storage
 store
 stored
@@ -8402,7 +8369,6 @@ stormer
 stormy
 story
 storytelling
-story’
 straight
 stranded
 strands
@@ -8455,7 +8421,6 @@ stuck
 student
 students
 studies
-studies”
 studio
 studios
 study
@@ -8495,9 +8460,9 @@ success
 successful
 successfully
 such
+suck
 sucked
 sucks
-suck”
 sudan
 sudoku
 sue
@@ -8682,9 +8647,9 @@ tasks
 taste
 tastes
 taught
+taunting
 tax
 taxes
-taxes”
 taxi
 taxify
 taxis
@@ -8717,10 +8682,12 @@ technical
 technical-ebooks
 technique
 techniques
+technocratic
 technological
 technologies
 technology
 techrepublic
+techsploitation
 techstars
 tech…
 ted
@@ -8754,7 +8721,6 @@ terminal
 terminal.app
 terminology
 terms
-term’
 terraform
 terrahub.io
 terrifying
@@ -8771,7 +8737,6 @@ testifies
 testify
 testing
 tests
-test”
 tether
 tetris
 teva
@@ -8786,6 +8751,7 @@ thai
 thailand
 than
 thanks
+thanksgiving
 that
 thaw
 the
@@ -8796,7 +8762,6 @@ them
 theme
 themes
 themselves
-themselves.”
 then
 theodore
 theorem
@@ -8826,13 +8791,12 @@ thirteen
 this
 thomas
 thor
+thorough
 those
 thought
 thoughtbot
 thoughtful
 thoughts
-thought’
-thought”
 thousands
 thread
 thread-safe
@@ -8874,7 +8838,6 @@ timelog
 timeouts
 timers
 times
-times’
 tinder
 tiny
 tip
@@ -8902,7 +8865,6 @@ todd
 toddler
 todo
 together
-together’
 toilets
 tok
 token
@@ -9049,7 +9011,6 @@ triangle
 triangulation
 tribe
 tribune
-tribune”
 tribute
 trick
 trickery
@@ -9084,7 +9045,6 @@ troy
 truck
 trucks
 truckstop
-trucks”
 true
 truebit
 truly
@@ -9139,6 +9099,7 @@ twilio
 twin
 twins
 twisted
+twistedsifter
 twitch
 twitter
 twlocation
@@ -9224,7 +9185,7 @@ ungoogled-chromium
 unhackable
 unicorn
 unified
-uniforms’
+uniforms
 unifying
 uninsurable
 unintended
@@ -9297,7 +9258,6 @@ upsell
 upset
 upskilling
 uptake
-up”
 uranus
 urban
 urge
@@ -9386,7 +9346,7 @@ vehicle
 vehicle-to-vehicle
 vehicles
 vehicular
-velocities”
+velocities
 velocity
 velodyne
 vendor
@@ -9494,6 +9454,7 @@ voting
 voyager
 vp
 vpn
+vpnfilter
 vr
 vrm
 vs
@@ -9541,7 +9502,6 @@ wanna
 want
 wanted
 wants
-want”
 war
 war-era
 ward
@@ -9573,6 +9533,7 @@ watchdog
 watched
 watches
 watchmakers
+watchtv
 water
 watermelon
 waters
@@ -9627,7 +9588,6 @@ week
 weekend
 weekly
 weeks
-weeks”
 wef
 wehe
 weigh
@@ -9768,7 +9728,6 @@ works
 workshop
 workspace
 workstations
-work”
 world
 world-class
 worldwide
@@ -9843,7 +9802,6 @@ year-old
 yearly
 yearning
 years
-year”
 yellowant
 yemen
 yes
@@ -9863,7 +9821,6 @@ yourself
 youtube
 youtuber
 you–and
-you’
 you’ll
 you’re
 you’ve
@@ -9891,7 +9848,6 @@ zipline
 zombies
 zone
 zones
-zone”
 zoning
 zoom
 zprint
@@ -9900,164 +9856,11 @@ zte
 zuckerberg
 zuckerbergs
 zurich
-«twistedsifter
 ðapp
 ​one
 ‍‍
 –
 —
-‘a
-‘all
-‘ask
-‘autonomy’
-‘babylon
-‘bristlecone’
-‘bully’
-‘b’
-‘college’
-‘crab-like’
-‘digital
-‘exploratory’
-‘fish’
-‘game-changer’
-‘grin’
-‘hail
-‘housing
-‘increasing
-‘internet
-‘it
-‘literature
-‘neonic’
-‘next
-‘nova’
-‘offline’
-‘operation
-‘pickers’
-‘poor’
-‘post-millennials’
-‘real
-‘revolution’
-‘rich’
-‘rift
-‘rising
-‘rock
-‘since
-‘smart
-‘sue
-‘superstar’
-‘tell
-‘thanksgiving’
-‘the
-‘they
-‘thorough
-‘time’
-‘user
-‘vaccine’
-‘watchtv’
-‘we’re
-‘when
-‘who
-‘will
-‘you’re
-“=”
-“@”
-“a
-“access
-“adult
-“all
-“american”
-“app
-“beta”
-“better
-“bus
-“but
-“can't”
-“caught
-“cell
-“compile”
-“crypto”
-“cyber-meddling”
-“cyber-warriors”
-“dear
-“digital
-“doh
-“dynamic
-“d”
-“encyclopedia
-“experiment”
-“facebook
-“filesystem”
-“future
-“games”
-“game”
-“git
-“glide
-“great
-“grievance
-“grit”
-“group
-“harsh”
-“have
-“he
-“high
-“housing
-“how
-“hustle
-“ideas
-“in
-“inprivate
-“inside”
-“it
-“keep
-“larger
-“learn
-“look
-“make
-“metal
-“morning
-“musical
-“no-go
-“not
-“no”
-“on
-“own”
-“people
-“perfect”
-“porch
-“private”
-“professionally”
-“programming
-“rain
-“real
-“rsync”-command
-“running
-“saas
-“segmentsmack”
-“shovel-ready”
-“sin
-“skam,”
-“solving
-“taunting”
-“tech
-“technocratic”
-“techsploitation,”
-“the
-“thinking”
-“touch”
-“trust
-“uber
-“under
-“vpnfilter
-“wall
-“we
-“what
-“whatever
-“why
-“work
-“working
-“yes”
-“you
-”
 √log
 ꓘamerka
 
