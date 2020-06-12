@@ -37,47 +37,147 @@ def main():
         print("Usage: nb_classifier [file_path]")
         return
 
-    ###########################
     # TASK 1
-    # load data and train model
-    ###########################
-
+    # load data
     training_set, testing_set = load_data(csv_file_path)
 
+    # train model
     feature_vectors, correct_labels, removed_words = prepare_data(training_set)
-
-    start_time = time.time()
-
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
-    print(f'\nModel constructed in {time.time() - start_time} seconds.\n')
 
+    # print model stats and output model to file
+    print("\n## BASELINE MODEL ##")
     print_basic_model_stats(nb_classifier)
-    output_model_to_file(nb_classifier, removed_words)
+    output_model_to_file(nb_classifier, MODEL_OUTPUT_FILE)
 
-    # todo check class_count_ and feature_count_ from sklearn
-    # todo and generate model.txt and compare
+    # output vocabulary, removed-words files
+    vocabulary = nb_classifier.get_vocabulary()
+    with open("vocabulary.txt", "w", encoding='utf-8') as voc_file, \
+            open("removed_words.txt", "w", encoding='utf-8') as rem_file:
+        voc_file.write('\n'.join(vocabulary))
+        rem_file.write('\n'.join(removed_words))
 
-    # Task 2
-    # classify
-
+    # TASK 2
+    # prepare testing data
     test_vectors, test_correct_labels, _ = prepare_data(testing_set)
+
+    # test model, print stats and output results to file
     nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
     print_metrics(metrics)
-    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes, BASELINE_OUTPUT_FILE)
+    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes,
+                                BASELINE_OUTPUT_FILE)
+
+    # TASK 3
+    # Experiments with model manipulations
+
+    # Experiment 1: stop-word filtering
+    model_output_file = "stopword-model"
+    result_output_file = "stopword-result"
+
+    with open("stopwords.txt", "r", encoding='utf-8') as sw_file:
+        stop_words = sw_file.read().split('\n')
+
+    # make a stop-word filter to use in preparation of the data
+    word_filter = word_filter_factory(stop_words)
+
+    # train new model
+    feature_vectors, correct_labels, _ = prepare_data(training_set, word_filter)
+    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
+
+    # print stats and output model to file
+    print("\n## STOP-WORD MODEL ##")
+    print_basic_model_stats(nb_classifier)
+    output_model_to_file(nb_classifier, model_output_file)
+
+    # test model, print stats and output results to file
+    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+    print_metrics(metrics)
+    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes,
+                                result_output_file)
+
+    # Experiment 2: word lengths
+    model_output_file = "wordlength-model"
+    result_output_file = "wordlength-result"
+
+    # build new model with word-length filter
+    feature_vectors, correct_labels, _ = prepare_data(training_set, word_length_filter)
+    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
+
+    # print model stats and output model to file
+    print("\n## STOP-WORD MODEL ##")
+    print_basic_model_stats(nb_classifier)
+    output_model_to_file(nb_classifier, model_output_file)
+
+    # test model, print stats and output results to file
+    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+    print_metrics(metrics)
+    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes,
+                                result_output_file)
+
+    # Experiment 3: frequency
+
+    # Remove infrequent words
+    # todo make method remove_infrequent_words
+
+    freq_list = (1, 5, 10, 15, 20)  # frequencies for which we remove words
+    metrics_rem_infreq = []  # to stock metrics for each round of removal
+
+    # get a fresh copy of the baseline classifier
+    feature_vectors, correct_labels, _ = prepare_data(training_set, word_length_filter)
+    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
+
+    # getting metrics after each round of removal
+    for frequency in freq_list:
+        remove = []
+        for word, properties in nb_classifier.model.items():
+            if sum(properties.frequencies.values()) <= frequency:
+                remove.append(word)
+
+        for key in remove:
+            del nb_classifier.model[key]
+
+        _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+        metrics_rem_infreq.append(metrics)
+
+    # Remove most frequent words
+    # todo method rem_most_freq_words
+
+    freq_list = (0.05, 0.1, 0.15, 0.2)  # frequencies we will remove
+    metrics_rem_freq = []
+    # get a brand new model
+    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
+
+    # order keys in terms of frequency
+    sorted_freq_keys = sorted(nb_classifier.model.keys(),
+                              key=lambda k: sum(nb_classifier.model[k].frequencies.values()),
+                              reverse=True)
+
+    for frequency in freq_list:
+        # get most frequent keys
+        for i in range(math.floor(frequency * len(sorted_freq_keys))):
+            if sorted_freq_keys[i] in nb_classifier.model: # we may have already removed this key in previous round
+                del nb_classifier.model[sorted_freq_keys[i]]
+
+        _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+        metrics_rem_freq.append(metrics)
+
+    # todo display plot for both, also save ping file
+    # todo display previous test results as well?
+    # todo press enter between models
 
 
-    # todo compare with same model with sklearn
+# todo
+def training_routine():
+    pass
 
-    # Task3: implement way to pass a function to the trainer to filter words.
-    # re-train, use same variables (dont hog memory)
-    # add filters
-    #todo for both procedures, plot a multi bar histogram:
-    # for each x, plot a bar for each metric, maybe write f1-measure at the bottom
-    # if time permits, test if rebuilding model adds to experiment
+
+# todo
+def testing_routine():
+    pass
 
 
 def load_data(csv_file_path):
-    # keeps track of how many models have been generated, to keep distinct names and avoid over-writing files
+
     training_set = []
     testing_set = []
 
@@ -103,7 +203,7 @@ def load_data(csv_file_path):
     return training_set, testing_set
 
 
-def prepare_data(data_set):
+def prepare_data(data_set, filter_func=None):
 
     feature_vectors = []
     classifications = []
@@ -115,10 +215,83 @@ def prepare_data(data_set):
         class_name = row[3].strip()  # retrieve class name
         classifications.append(class_name)
 
-        tokens = tokenize_row(row, removed_words)
+        tokens = tokenize_row(row, removed_words, filter_func)
         feature_vectors.append(tokens)
 
     return feature_vectors, classifications, removed_words
+
+
+def tokenize_row(row, removed_words, filter_func=None):
+    """
+    Returns a list of tokens from an entry.
+    It separates words separated by a forward slash,
+    removes punctuation at beginning and end of a token,
+    removes "'s" endings,
+    remove tokens which consist of a lonely punctuation sign, contain a digit or are an empty string.
+    :param row:
+    :param removed_words:
+    :param args: any number of additional filtering functions to apply to the tokenization process
+    :return:
+    """
+    punctuation = string.punctuation
+    punctuation += "“”‘’«"
+    title = row[2].replace('/', ' ')
+    tokens = title.split()
+    tokens = [token.strip(punctuation).lower() for token in tokens if token not in punctuation]
+    tokens = [re.sub(r'[\'’]s$', '', token) for token in tokens]  # removing "'s" endings
+    # remove words with digits and empty strings
+    i = 0
+    n = len(tokens)
+    while i < n:
+        token = tokens[i]
+        if not token:
+            del tokens[i]
+            n -= 1
+        elif re.match(r'.*\d.*', token):
+            removed_words.append(token)
+            del tokens[i]
+            n -= 1
+        else:
+            i += 1
+
+    if filter_func:
+        tokens = filter_func(tokens, removed_words)
+
+    return tokens
+
+
+def word_filter_factory(stop_words):
+
+    def func(tokens, removed_words):
+        i = 0
+        n = len(tokens)
+        while i < n:
+            token = tokens[i]
+            if token in stop_words:
+                removed_words.append(token)
+                del tokens[i]
+                n -= 1
+            else:
+                i += 1
+
+        return tokens
+
+    return func
+
+
+def word_length_filter(tokens, removed_words):
+    i = 0
+    n = len(tokens)
+    while i < n:
+        token = tokens[i]
+        if not 2 < len(token) < 9:
+            removed_words.append(token)
+            del tokens[i]
+            n -= 1
+        else:
+            i += 1
+
+    return tokens
 
 
 class NaiveBayesClassifier:
@@ -241,6 +414,9 @@ class NaiveBayesClassifier:
         # print(f'\nmetrics took {time.time() - start} seconds\n')
         # return metrics
 
+    def get_vocabulary(self):
+        return [word for word in sorted(self.model.keys())]
+
 
 class FeatureProperties:
     """
@@ -265,68 +441,7 @@ class Metrics:
         self.f1 = f1
 
 
-def tokenize_row(row, removed_words, *args):
-    """
-    Returns a list of tokens from an entry.
-    It separates words separated by a forward slash,
-    removes punctuation at beginning and end of a token,
-    removes "'s" endings,
-    remove tokens which consist of a lonely punctuation sign, contain a digit or are an empty string.
-    :param row:
-    :param removed_words:
-    :param args: any number of additional filtering functions to apply to the tokenization process
-    :return:
-    """
-    punctuation = string.punctuation
-    punctuation += "“”‘’«"
-    title = row[2].replace('/', ' ')
-    tokens = title.split()
-    tokens = [token.strip(punctuation).lower() for token in tokens if token not in punctuation]
-    tokens = [re.sub(r'[\'’]s$', '', token) for token in tokens]  # removing "'s" endings
-    # remove words with digits and empty strings
-    i = 0
-    n = len(tokens)
-    while i < n:
-        token = tokens[i]
-        if not token:
-            del tokens[i]
-            n -= 1
-        elif re.match(r'.*\d.*', token):
-            removed_words.append(f'{token}\n')
-            del tokens[i]
-            n -= 1
-        else:
-            i += 1
-
-    if len(args) > 0:
-        for func in args:
-            tokens = func(tokens)
-
-    return tokens
-
-
-def stop_word_filter(tokens, stop_list):
-    pass
-
-
-def word_length_filter(tokens):
-    pass
-
-
-def infrequent_word_filter(model):
-    # remove don't rebuild for now
-    # could use a stop list
-    pass
-
-
-def most_frequent_word_filter(model, percentage):
-    # remove dont rebuild for now
-    # could rebuild w a stop list
-    pass
-
-
 def print_basic_model_stats(nb_classifier):
-    print("BASIC MODEL STATS\n")
     print(f"size of vocabulary: {len(nb_classifier.model)}")
     print(f'classification counts: {nb_classifier.class_frequencies}')
     print(f'words per class: {nb_classifier.word_frequencies}')
@@ -347,14 +462,12 @@ def print_metrics(metrics):
 
 
 # todo write class name in output
-def output_model_to_file(classifier, removed_words):
+def output_model_to_file(classifier, file_name):
     # prepare model output file
     model_lines = []
     line_counter = 1
-    vocabulary = []
 
     for feature, feature_properties in sorted(classifier.model.items()):
-        vocabulary.append(f'{feature}\n')
 
         line = [f'{line_counter}  {feature}']  # using a list to avoid multiple concatenations
         for class_name in classifier.classes:
@@ -367,14 +480,10 @@ def output_model_to_file(classifier, removed_words):
 
         line_counter += 1
 
-    model_file_name = f'{MODEL_OUTPUT_FILE}.txt'
+    model_file_name = f'{file_name}.txt'
 
-    with open(model_file_name, "w", encoding='utf-8') as model_file, \
-            open("vocabulary.txt", "w", encoding='utf-8') as voc_file, \
-            open("removed_words.txt", "w", encoding='utf-8') as rem_file:
+    with open(model_file_name, "w", encoding='utf-8') as model_file:
         model_file.writelines(model_lines)
-        voc_file.writelines(vocabulary)
-        rem_file.writelines(removed_words)
 
 
 # todo add classname or otherwise show order
