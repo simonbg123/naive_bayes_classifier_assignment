@@ -6,6 +6,9 @@
 
 # todo at first hard-coded classes, but decided to make it more flexible
 
+# todo remove hard-coding of classes
+
+
 import csv
 import string
 import time
@@ -14,6 +17,7 @@ import sys
 import pathlib
 import itertools
 import math
+import numpy as np
 
 """ Constants """
 DELTA = 0.5
@@ -40,20 +44,15 @@ def main():
 
     training_set, testing_set = load_data(csv_file_path)
 
-    feature_vectors, classifications, removed_words = prepare_data(training_set)
+    feature_vectors, correct_labels, removed_words = prepare_data(training_set)
 
     start_time = time.time()
 
-    nb_classifier = NaiveBayesClassifier(feature_vectors, classifications, DELTA, CLASSES)
+    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
     print(f'\nModel constructed in {time.time() - start_time} seconds.\n')
 
+    print_basic_model_stats(nb_classifier)
     output_model_to_file(nb_classifier, removed_words)
-
-    print("BASIC MODEL STATS\n")
-    print(f"size of vocabulary: {len(nb_classifier.model)}")
-    print(f'classification counts: {nb_classifier.class_frequencies}')
-    print(f'words per class: {nb_classifier.word_frequencies}')
-    print(f'Priors: {nb_classifier.class_prior_likelihoods}')
 
     # todo check class_count_ and feature_count_ from sklearn
     # todo and generate model.txt and compare
@@ -61,20 +60,11 @@ def main():
     # Task 2
     # classify
 
-    testing_vectors, testing_classifications, _ = prepare_data(testing_set)
-    test_classification = nb_classifier.classify(testing_vectors)
+    test_vectors, test_correct_labels, _ = prepare_data(testing_set)
+    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+    print_metrics(metrics)
+    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes, BASELINE_OUTPUT_FILE)
 
-    # todo one method to output to file, one method to get metrics.
-    metrics = process_results(test_classification, testing_set, BASELINE_OUTPUT_FILE, nb_classifier)
-
-    print("\nTEST METRICS\n")
-    print("Accuracy: {0:.4f}".format(metrics.accuracy))
-    line = ["'{}': {:.4f}".format(class_name, value) for class_name, value in metrics.precision.items()]
-    print(f"Precision: {''.join(line)}")
-    line = ["'{}': {:.4f}".format(class_name, value) for class_name, value in metrics.recall.items()]
-    print(f"Recall: {''.join(line)}")
-    line = ["'{}': {:.4f}".format(class_name, value) for class_name, value in metrics.f1.items()]
-    print(f"F1 Scores: {''.join(line)}")
 
     # todo compare with same model with sklearn
 
@@ -133,18 +123,14 @@ def prepare_data(data_set):
 
 class NaiveBayesClassifier:
 
-    def __init__(self, feature_vectors, classifications, delta, classes=None):
+    def __init__(self, feature_vectors, correct_labels, delta):
         self.feature_vectors = feature_vectors
-        self.classifications = classifications
+        self.correct_labels = correct_labels
         self.delta = delta
 
         # train
 
-        if classes:
-            self.classes = classes
-        else:   # retrieve class names
-            self.classes = {class_name for class_name in self.classifications}
-            #todo make sure order is stable
+        self.classes = tuple({class_name for class_name in self.correct_labels})
 
         # initialize all mappings to zero
         self.model = {}
@@ -153,7 +139,7 @@ class NaiveBayesClassifier:
         self.word_frequencies = {class_name: 0 for class_name in self.classes}
 
         # add features to model and/or increment class frequencies for feature and overall;
-        for (vector, class_name) in zip(self.feature_vectors, self.classifications):
+        for (vector, class_name) in zip(self.feature_vectors, self.correct_labels):
 
             self.class_frequencies[class_name] += 1
 
@@ -175,14 +161,13 @@ class NaiveBayesClassifier:
                 feature_properties.likelihoods[class_name] = cond_prob
 
         # get class priors
-        n_entries = sum(self.class_frequencies.values())
-        # smoothing becomes necessary since the assignment requires probabilities for poll class
-        # but poll class in absent from the training set
+        n_entries = len(correct_labels)
         for class_name in self.classes:
-            self.class_prior_likelihoods[class_name] = (self.class_frequencies[class_name] + self.delta) / n_entries
+            self.class_prior_likelihoods[class_name] = (self.class_frequencies[class_name]) / n_entries
 
     def classify(self, vectors):
         nb_scores = []
+        nb_classes = []
         for vector in vectors:
             scores = []
             for class_name in self.classes:
@@ -191,10 +176,70 @@ class NaiveBayesClassifier:
                     if feature in self.model:
                         score += math.log(self.model[feature].likelihoods[class_name], 10)
                 scores.append(score)
-            scores.append(self.classes[scores.index(max(scores))])  # append most likely classification
             nb_scores.append(scores)
+            most_likely_class = self.classes[scores.index(max(scores))]
+            nb_classes.append(most_likely_class)  # append most likely classification
 
-        return nb_scores
+        return nb_scores, nb_classes
+
+    def test(self, test_vectors, test_correct_labels):
+        nb_scores, nb_labels = self.classify(test_vectors)
+        metrics = self.get_metrics(nb_labels, test_correct_labels)
+
+        return nb_scores, nb_labels, metrics
+
+    def get_metrics(self, nb_labels, correct_labels):
+
+        conf_mat = np.zeros((len(self.classes), len(self.classes)), int)
+        # to convert class_name to indices
+        label_index = {class_name: index for (class_name, index) in zip(self.classes, range(len(self.classes)))}
+
+        for (nb_label, correct_label) in zip(nb_labels, correct_labels):
+            # get indices
+            nb_label_i = label_index[nb_label]
+            correct_label_i = label_index[correct_label]
+            # populate confusion matrix
+            conf_mat[nb_label_i][correct_label_i] += 1
+
+        accuracy = sum(conf_mat.diagonal()) / conf_mat.sum()
+        precision_vector = conf_mat.diagonal() / np.sum(conf_mat, 1)
+        recall_vector = conf_mat.diagonal() / np.sum(conf_mat, 0)
+        f1_vector = (2 * p * r / (p + r) for (p, r) in zip(precision_vector, recall_vector))
+
+        precision = {class_name: value for (class_name, value) in zip(self.classes, precision_vector)}
+        recall = {class_name: value for (class_name, value) in zip(self.classes, recall_vector)}
+        f1 = {class_name: value for (class_name, value) in zip(self.classes, f1_vector)}
+
+        return Metrics(accuracy, precision, recall, f1)
+
+        # Below, without confusion matrix
+        # start = time.time()
+        # correct = {class_name: 0 for class_name in self.classes}
+        # incorrect = {class_name: 0 for class_name in self.classes}
+        # missing = {class_name: 0 for class_name in self.classes}
+        #
+        # for (nb_label, correct_label) in zip(nb_labels, correct_labels):
+        #     if nb_label == correct_label:
+        #         correct[nb_label] += 1
+        #     else:
+        #         incorrect[nb_label] += 1
+        #         missing[correct_label] += 1
+        #
+        # # computing metrics
+        # metrics = Metrics()
+        # metrics.accuracy = sum(correct.values()) / len(nb_labels)
+        # for class_name in self.classes:
+        #     correct_label_count = correct[class_name]
+        #     precision = correct_label_count / (correct_label_count + incorrect[class_name])
+        #     recall = correct_label_count / (correct_label_count + missing[class_name])
+        #     f1 = 2 * recall * precision / (recall + precision)
+        #
+        #     metrics.precision[class_name] = precision
+        #     metrics.recall[class_name] = recall
+        #     metrics.f1[class_name] = f1
+        #
+        # print(f'\nmetrics took {time.time() - start} seconds\n')
+        # return metrics
 
 
 class FeatureProperties:
@@ -213,11 +258,11 @@ class FeatureProperties:
 
 class Metrics:
 
-    def __init__(self):
-        self.accuracy = 0
-        self.precision = {}
-        self.recall = {}
-        self.f1 = {}
+    def __init__(self, accuracy, precision, recall, f1):
+        self.accuracy = accuracy
+        self.precision = precision
+        self.recall = recall
+        self.f1 = f1
 
 
 def tokenize_row(row, removed_words, *args):
@@ -280,6 +325,28 @@ def most_frequent_word_filter(model, percentage):
     pass
 
 
+def print_basic_model_stats(nb_classifier):
+    print("BASIC MODEL STATS\n")
+    print(f"size of vocabulary: {len(nb_classifier.model)}")
+    print(f'classification counts: {nb_classifier.class_frequencies}')
+    print(f'words per class: {nb_classifier.word_frequencies}')
+    print(f'Priors: {nb_classifier.class_prior_likelihoods}')
+    print()
+
+
+def print_metrics(metrics):
+    print("TEST METRICS\n")
+    print("Accuracy: {0:.4f}".format(metrics.accuracy))
+    line = [" '{}': {:.4f},".format(class_name, value) for class_name, value in metrics.precision.items()]
+    print(f"Precision: {''.join(line)}")
+    line = [" '{}': {:.4f},".format(class_name, value) for class_name, value in metrics.recall.items()]
+    print(f"Recall: {''.join(line)}")
+    line = [" '{}': {:.4f},".format(class_name, value) for class_name, value in metrics.f1.items()]
+    print(f"F1 Scores: {''.join(line)}")
+    print()
+
+
+# todo write class name in output
 def output_model_to_file(classifier, removed_words):
     # prepare model output file
     model_lines = []
@@ -288,6 +355,7 @@ def output_model_to_file(classifier, removed_words):
 
     for feature, feature_properties in sorted(classifier.model.items()):
         vocabulary.append(f'{feature}\n')
+
         line = [f'{line_counter}  {feature}']  # using a list to avoid multiple concatenations
         for class_name in classifier.classes:
             line.append(
@@ -296,6 +364,7 @@ def output_model_to_file(classifier, removed_words):
         line.append('\n')
 
         model_lines.append(''.join(line))
+
         line_counter += 1
 
     model_file_name = f'{MODEL_OUTPUT_FILE}.txt'
@@ -308,59 +377,27 @@ def output_model_to_file(classifier, removed_words):
         rem_file.writelines(removed_words)
 
 
-def process_results(results, testing_set, file_name, model):
+# todo add classname or otherwise show order
+def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, classes, file_name):
     lines = []
     line_counter = 1
-    correct_labels = {class_name : 0 for class_name in model.classes}
-    incorrect_labels = {class_name : 0 for class_name in model.classes}
-    missing_labels = {class_name : 0 for class_name in model.classes}
 
-    # outputting results to file and compiling data for metrics
-    for (result, row) in zip(results, testing_set):
+    # outputting results to file
+    for (nb_score_vector, nb_label, correct_label, row) in zip(nb_scores, nb_labels, test_correct_labels, testing_set):
 
-        model_label = result[-1]
-        right_label = row[3]
+        right_wrong = "right" if nb_label == correct_label else "wrong"
 
-        if model_label == right_label:
-            right_wrong = "right"
-            correct_labels[model_label] += 1
-        else:
-            right_wrong = "wrong"
-            incorrect_labels[model_label] += 1
-            missing_labels[right_label] += 1
-
-        line = [f'{line_counter}  {row[2]}  {result[-1]}']  # using a list to avoid multiple concatenations
-        for i in range(len(model.classes)):
-            line.append(f'  {"{0:.6f}".format(result[i])}')
-        line.append(f'  {row[3]}  {right_wrong}\n')
-        line_counter += 1
+        line = [f'{line_counter}  {row[2]}  {nb_label}']  # using a list to avoid multiple concatenations
+        for i in range(len(classes)):
+            line.append(f'  {"{0:.6f}".format(nb_score_vector[i])}')
+        line.append(f'  {correct_label}  {right_wrong}\n')
         lines.append(''.join(line))
-
-    # computing metrics
-    metrics = Metrics()
-    metrics.accuracy = sum(correct_labels.values()) / len(results)
-    for class_name in model.classes:
-        correct_label_count = correct_labels[class_name]
-
-        if correct_label_count == 0:
-            precision = 0
-            recall = 0
-            f1 = 0
-        else:
-            precision = correct_label_count / (correct_label_count + incorrect_labels[class_name])
-            recall = correct_label_count / (correct_label_count + missing_labels[class_name])
-            f1 = 2 * recall * precision / (recall + precision)
-
-        metrics.precision[class_name] = precision
-        metrics.recall[class_name] = recall
-        metrics.f1[class_name] = f1
+        line_counter += 1
 
     file_name = f'{file_name}.txt'
 
     with open(file_name, "w", encoding='utf-8') as file:
         file.writelines(lines)
-
-    return metrics
 
 
 if __name__ == "__main__":
