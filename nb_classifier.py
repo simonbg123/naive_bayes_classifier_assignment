@@ -4,27 +4,15 @@
 # For COMP 472 Section ABIX – Summer 2020
 # --------------------------------------------------------
 
-# todo at first hard-coded classes, but decided to make it more flexible
-
-# todo remove hard-coding of classes
-
-
 import csv
 import string
-import time
 import re
 import sys
-import pathlib
-import itertools
 import math
-import numpy as np
 from matplotlib import pyplot as plt
 
 """ Constants """
 DELTA = 0.5
-CLASSES = ('story', 'ask_hn', 'show_hn', 'poll')
-MODEL_OUTPUT_FILE = "model-2018"
-BASELINE_OUTPUT_FILE = "baseline-result"
 DEFAULT_DATA_PATH = "hns_2018_2019.csv"
 
 
@@ -47,9 +35,13 @@ def main():
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
 
     # print model stats and output model to file
-    print("\n## BASELINE MODEL ##")
+    print("\n## BASELINE MODEL ##\n")
+    model_output_file = "model-2018"
+    baseline_output_file = "baseline-result"
+    plot_title = "BASELINE MODEL"
+
     print_basic_model_stats(nb_classifier)
-    output_model_to_file(nb_classifier, MODEL_OUTPUT_FILE)
+    output_model_to_file(nb_classifier, model_output_file)
 
     # output vocabulary, removed-words files
     vocabulary = nb_classifier.get_vocabulary()
@@ -59,21 +51,21 @@ def main():
         rem_file.write('\n'.join(removed_words))
 
     # TASK 2
-    # prepare testing data
+    # prepare testing data - will also be used for experiments
     test_vectors, test_correct_labels, _ = prepare_data(testing_set)
 
-    # test model, print stats and output results to file
-    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-    print_metrics(metrics)
-    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes,
-                                BASELINE_OUTPUT_FILE)
+    testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, baseline_output_file, plot_title)
 
     # TASK 3
     # Experiments with model manipulations
 
     # Experiment 1: stop-word filtering
+    input("PRESS ENTER to continue with stop-word experiment\n")
+    print("\n## STOP-WORD MODEL ##\n")
+
     model_output_file = "stopword-model"
     result_output_file = "stopword-result"
+    plot_title = "STOP-WORD TEST"
 
     with open("stopwords.txt", "r", encoding='utf-8') as sw_file:
         stop_words = sw_file.read().split('\n')
@@ -81,144 +73,56 @@ def main():
     # make a stop-word filter to use in preparation of the data
     word_filter = word_filter_factory(stop_words)
 
-    # train new model
-    feature_vectors, correct_labels, _ = prepare_data(training_set, word_filter)
-    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
-
-    # print stats and output model to file
-    print("\n## STOP-WORD MODEL ##")
-    print_basic_model_stats(nb_classifier)
-    output_model_to_file(nb_classifier, model_output_file)
-
-    # test model, print stats and output results to file
-    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-    print_metrics(metrics)
-    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes,
-                                result_output_file)
+    nb_classifier = training_routine(training_set, model_output_file, DELTA, word_filter)
+    testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, result_output_file, plot_title)
 
     # Experiment 2: word lengths
+    input("PRESS ENTER to continue with word-length experiment\n")
+    print("\n## WORD-LENGTH MODEL ##\n")
+
     model_output_file = "wordlength-model"
     result_output_file = "wordlength-result"
+    plot_title = "WORD-LENGTH TEST"
 
-    # build new model with word-length filter
+    nb_classifier = training_routine(training_set, model_output_file, DELTA, word_length_filter)
+    testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, result_output_file,plot_title)
+
+    # Experiment 3: frequency experiments
+    input("PRESS ENTER to continue with frequency experiments\n")
+
+    # Remove infrequent words experiment
+
+    # get a fresh model
     feature_vectors, correct_labels, _ = prepare_data(training_set, word_length_filter)
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
+    initial_word_count = len(nb_classifier.model)
 
-    # print model stats and output model to file
-    print("\n## STOP-WORD MODEL ##")
-    print_basic_model_stats(nb_classifier)
-    output_model_to_file(nb_classifier, model_output_file)
-
-    # test model, print stats and output results to file
-    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-    print_metrics(metrics)
-    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes,
-                                result_output_file)
-
-    # Experiment 3: frequency
-
-    # Remove infrequent words
-    # todo make method remove_infrequent_words
-
+    # conduct the experiment
     freq_list = (1, 5, 10, 15, 20)  # frequencies for which we remove words
+    data_rem_infreq, x_ticks_infreq = infrequent_words_experiment(freq_list, nb_classifier, test_vectors, test_correct_labels)
 
-    # get a fresh copy of the baseline classifier
-    feature_vectors, correct_labels, _ = prepare_data(training_set, word_length_filter)
-    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
-
-    data_rem_infreq = {'accuracy': []}  # to stock metrics for each round of removal
-    for class_name in nb_classifier.classes:
-        key = f'F1 score: {class_name}'
-        data_rem_infreq[key] = []
-
-    x_ticks_infreq = []
-    # getting metrics after each round of removal
-    for frequency in freq_list:
-        remove = []
-        for word, properties in nb_classifier.model.items():
-            if sum(properties.frequencies.values()) <= frequency:
-                remove.append(word)
-
-        for key in remove:
-            del nb_classifier.model[key]
-
-        _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-
-        data = [metrics.accuracy]
-        for val in metrics.f1.values():
-            data.append(val)
-
-        for key, val in zip(data_rem_infreq.keys(), data):
-            data_rem_infreq[key].append(val)
-
-        x_ticks_infreq.append(len(nb_classifier.model))
-
-    # Remove most frequent words
-    # todo method rem_most_freq_words
-
-    freq_list = (0.05, 0.1, 0.15, 0.2, 0.25)  # frequencies we will remove
+    # Remove most frequent words experiment
 
     # get a brand new model
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
 
-    data_rem_freq = {'accuracy': []}  # to stock metrics for each round of removal
-    for class_name in nb_classifier.classes:
-        key = f'F1 score: {class_name}'
-        data_rem_freq[key] = []
+    # conduct experiment
+    freq_list = (0.05, 0.1, 0.15, 0.2, 0.25)  # frequencies we will remove
+    data_rem_freq, x_ticks_freq = frequent_words_experiment(freq_list, nb_classifier, test_vectors, test_correct_labels)
 
-    # order keys in terms of frequency
-    sorted_freq_keys = sorted(nb_classifier.model.keys(),
-                              key=lambda k: sum(nb_classifier.model[k].frequencies.values()),
-                              reverse=True)
-
-    x_ticks_freq = []
-    for frequency in freq_list:
-        # get most frequent keys
-        for i in range(math.floor(frequency * len(sorted_freq_keys))):
-            if sorted_freq_keys[i] in nb_classifier.model: # we may have already removed this key in previous round
-                del nb_classifier.model[sorted_freq_keys[i]]
-
-        _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-
-        data = [metrics.accuracy]
-        for val in metrics.f1.values():
-            data.append(val)
-
-        for key, val in zip(data_rem_freq.keys(), data):
-            data_rem_freq[key].append(val)
-
-        x_ticks_freq.append(len(nb_classifier.model))
-
-    # plot
-    title = "Frequency experiments"
+    # plot joint results
+    plt.close()
+    title = f"Frequency experiments\nInitial vocabulary {initial_word_count}"
     fig, ax = plt.subplots(1, 2, figsize=(14, 5))
     bar_plot(fig, ax[0], data_rem_infreq, x_ticks_infreq, "Removing Infrequent Words")
     bar_plot(fig, ax[1], data_rem_freq, x_ticks_freq, "Removing Most Frequent Words")
     fig.suptitle(title)
     plt.subplots_adjust(left=0.18)
-
     plt.show(block=False)
 
     input("\nPress Enter to quit")
 
-    print("\nBye!")
-
-
-    # todo display plot for both, also save ping file
-    # todo display previous test results as well?
-    # todo press enter between models
-
-    # todo test display with four categories
-
-
-# todo
-def training_routine():
-    pass
-
-
-# todo
-def testing_routine():
-    pass
+    print("\nBye!\n")
 
 
 def load_data(csv_file_path):
@@ -246,6 +150,44 @@ def load_data(csv_file_path):
         exit()
 
     return training_set, testing_set
+
+
+def training_routine(training_set, output_file, delta, word_filter=None):
+    # train model
+    feature_vectors, correct_labels, removed_words = prepare_data(training_set, word_filter)
+    nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, delta)
+
+    # print model stats and output model to file
+    print_basic_model_stats(nb_classifier)
+    output_model_to_file(nb_classifier, output_file)
+
+    return nb_classifier
+
+
+def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, output_file, t):
+    # test model, print stats and output results to file
+    nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+    print_metrics(metrics)
+    output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, nb_classifier.classes, output_file)
+
+    # plot results
+    plt.close()
+    x_ticks = ['accuracy']
+    for class_name in nb_classifier.classes:
+        x_ticks.append(f"F1 score: {class_name}")
+
+    data = [metrics.accuracy]
+    for class_name in nb_classifier.classes:
+        data.append(metrics.f1[class_name])
+
+    fig, ax = plt.subplots(figsize=(7, 5))
+
+    plt.bar(x_ticks, data, width=0.7)
+    for i, v in enumerate(data):
+        ax.text(i - 0.15, v + 0.01, "{:.4f}".format(v), fontweight='bold')
+
+    ax.set_title(t)
+    plt.show(block=False)
 
 
 def prepare_data(data_set, filter_func=None):
@@ -445,7 +387,7 @@ class NaiveBayesClassifier:
             precision[class_name] = p
             recall[class_name] = r
             f1[class_name] = f
-            
+
         return Metrics(accuracy, precision, recall, f1)
 
     def get_vocabulary(self):
@@ -543,7 +485,73 @@ def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testi
         file.writelines(lines)
 
 
+def infrequent_words_experiment(freq_list, nb_classifier, test_vectors, test_correct_labels):
+
+    data_rem_infreq = {'accuracy': []}  # to stock metrics for each round of removal
+    for class_name in nb_classifier.classes:
+        key = f'F1 score: {class_name}'
+        data_rem_infreq[key] = []
+
+    x_ticks_infreq = []
+    # getting metrics after each round of removal
+    for frequency in freq_list:
+        remove = []
+        for word, properties in nb_classifier.model.items():
+            if sum(properties.frequencies.values()) <= frequency:
+                remove.append(word)
+
+        for key in remove:
+            del nb_classifier.model[key]
+
+        _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+
+        data = [metrics.accuracy]
+        for val in metrics.f1.values():
+            data.append(val)
+
+        for key, val in zip(data_rem_infreq.keys(), data):
+            data_rem_infreq[key].append(val)
+
+        x_ticks_infreq.append(len(nb_classifier.model))
+
+    return data_rem_infreq, x_ticks_infreq
+
+
+def frequent_words_experiment(freq_list, nb_classifier, test_vectors, test_correct_labels):
+
+    data_rem_freq = {'accuracy': []}  # to stock metrics for each round of removal
+    for class_name in nb_classifier.classes:
+        key = f'F1 score: {class_name}'
+        data_rem_freq[key] = []
+
+    # order keys in terms of frequency
+    sorted_freq_keys = sorted(nb_classifier.model.keys(),
+                              key=lambda k: sum(nb_classifier.model[k].frequencies.values()),
+                              reverse=True)
+
+    x_ticks_freq = []
+    for frequency in freq_list:
+        # get most frequent keys
+        for i in range(math.floor(frequency * len(sorted_freq_keys))):
+            if sorted_freq_keys[i] in nb_classifier.model:  # we may have already removed this key in previous round
+                del nb_classifier.model[sorted_freq_keys[i]]
+
+        _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
+
+        data = [metrics.accuracy]
+        for val in metrics.f1.values():
+            data.append(val)
+
+        for key, val in zip(data_rem_freq.keys(), data):
+            data_rem_freq[key].append(val)
+
+        x_ticks_freq.append(len(nb_classifier.model))
+
+    return data_rem_freq, x_ticks_freq
+
+
 def bar_plot(fig, ax,  data, x_ticks, title, legend=True):
+
     total_width = 0.8
     single_width = 0.9
 
