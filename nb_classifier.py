@@ -18,6 +18,7 @@ import pathlib
 import itertools
 import math
 import numpy as np
+from matplotlib import pyplot as plt
 
 """ Constants """
 DELTA = 0.5
@@ -120,12 +121,17 @@ def main():
     # todo make method remove_infrequent_words
 
     freq_list = (1, 5, 10, 15, 20)  # frequencies for which we remove words
-    metrics_rem_infreq = []  # to stock metrics for each round of removal
 
     # get a fresh copy of the baseline classifier
     feature_vectors, correct_labels, _ = prepare_data(training_set, word_length_filter)
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
 
+    data_rem_infreq = {'accuracy': []}  # to stock metrics for each round of removal
+    for class_name in nb_classifier.classes:
+        key = f'F1 score: {class_name}'
+        data_rem_infreq[key] = []
+
+    x_ticks_infreq = []
     # getting metrics after each round of removal
     for frequency in freq_list:
         remove = []
@@ -137,21 +143,35 @@ def main():
             del nb_classifier.model[key]
 
         _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-        metrics_rem_infreq.append(metrics)
+
+        data = [metrics.accuracy]
+        for val in metrics.f1.values():
+            data.append(val)
+
+        for key, val in zip(data_rem_infreq.keys(), data):
+            data_rem_infreq[key].append(val)
+
+        x_ticks_infreq.append(len(nb_classifier.model))
 
     # Remove most frequent words
     # todo method rem_most_freq_words
 
-    freq_list = (0.05, 0.1, 0.15, 0.2)  # frequencies we will remove
-    metrics_rem_freq = []
+    freq_list = (0.05, 0.1, 0.15, 0.2, 0.25)  # frequencies we will remove
+
     # get a brand new model
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
+
+    data_rem_freq = {'accuracy': []}  # to stock metrics for each round of removal
+    for class_name in nb_classifier.classes:
+        key = f'F1 score: {class_name}'
+        data_rem_freq[key] = []
 
     # order keys in terms of frequency
     sorted_freq_keys = sorted(nb_classifier.model.keys(),
                               key=lambda k: sum(nb_classifier.model[k].frequencies.values()),
                               reverse=True)
 
+    x_ticks_freq = []
     for frequency in freq_list:
         # get most frequent keys
         for i in range(math.floor(frequency * len(sorted_freq_keys))):
@@ -159,11 +179,36 @@ def main():
                 del nb_classifier.model[sorted_freq_keys[i]]
 
         _, _, metrics = nb_classifier.test(test_vectors, test_correct_labels)
-        metrics_rem_freq.append(metrics)
+
+        data = [metrics.accuracy]
+        for val in metrics.f1.values():
+            data.append(val)
+
+        for key, val in zip(data_rem_freq.keys(), data):
+            data_rem_freq[key].append(val)
+
+        x_ticks_freq.append(len(nb_classifier.model))
+
+    # plot
+    title = "Frequency experiments"
+    fig, ax = plt.subplots(1, 2, figsize=(14, 5))
+    bar_plot(fig, ax[0], data_rem_infreq, x_ticks_infreq, "Removing Infrequent Words")
+    bar_plot(fig, ax[1], data_rem_freq, x_ticks_freq, "Removing Most Frequent Words")
+    fig.suptitle(title)
+    plt.subplots_adjust(left=0.18)
+
+    plt.show(block=False)
+
+    input("\nPress Enter to quit")
+
+    print("\nBye!")
+
 
     # todo display plot for both, also save ping file
     # todo display previous test results as well?
     # todo press enter between models
+
+    # todo test display with four categories
 
 
 # todo
@@ -363,56 +408,45 @@ class NaiveBayesClassifier:
 
     def get_metrics(self, nb_labels, correct_labels):
 
-        conf_mat = np.zeros((len(self.classes), len(self.classes)), int)
-        # to convert class_name to indices
-        label_index = {class_name: index for (class_name, index) in zip(self.classes, range(len(self.classes)))}
+        correct = {class_name: 0 for class_name in self.classes}
+        incorrect = {class_name: 0 for class_name in self.classes}
+        missing = {class_name: 0 for class_name in self.classes}
 
         for (nb_label, correct_label) in zip(nb_labels, correct_labels):
-            # get indices
-            nb_label_i = label_index[nb_label]
-            correct_label_i = label_index[correct_label]
-            # populate confusion matrix
-            conf_mat[nb_label_i][correct_label_i] += 1
+            if nb_label == correct_label:
+                correct[nb_label] += 1
+            else:
+                incorrect[nb_label] += 1
+                missing[correct_label] += 1
 
-        accuracy = sum(conf_mat.diagonal()) / conf_mat.sum()
-        precision_vector = conf_mat.diagonal() / np.sum(conf_mat, 1)
-        recall_vector = conf_mat.diagonal() / np.sum(conf_mat, 0)
-        f1_vector = (2 * p * r / (p + r) for (p, r) in zip(precision_vector, recall_vector))
+        # computing metrics
+        accuracy = sum(correct.values()) / len(nb_labels)
+        precision = {}
+        recall = {}
+        f1 = {}
 
-        precision = {class_name: value for (class_name, value) in zip(self.classes, precision_vector)}
-        recall = {class_name: value for (class_name, value) in zip(self.classes, recall_vector)}
-        f1 = {class_name: value for (class_name, value) in zip(self.classes, f1_vector)}
+        for class_name in self.classes:
 
+            correct_label_count = correct[class_name]
+
+            if incorrect[class_name] == 0 and missing[class_name] == 0:
+                p = 1
+                r = 1
+                f = 1
+            elif correct_label_count == 0:
+                p = 0
+                r = 0
+                f = 0
+            else:
+                p = correct_label_count / (correct_label_count + incorrect[class_name])
+                r = correct_label_count / (correct_label_count + missing[class_name])
+                f = 2 * p * r / (p + r)
+
+            precision[class_name] = p
+            recall[class_name] = r
+            f1[class_name] = f
+            
         return Metrics(accuracy, precision, recall, f1)
-
-        # Below, without confusion matrix
-        # start = time.time()
-        # correct = {class_name: 0 for class_name in self.classes}
-        # incorrect = {class_name: 0 for class_name in self.classes}
-        # missing = {class_name: 0 for class_name in self.classes}
-        #
-        # for (nb_label, correct_label) in zip(nb_labels, correct_labels):
-        #     if nb_label == correct_label:
-        #         correct[nb_label] += 1
-        #     else:
-        #         incorrect[nb_label] += 1
-        #         missing[correct_label] += 1
-        #
-        # # computing metrics
-        # metrics = Metrics()
-        # metrics.accuracy = sum(correct.values()) / len(nb_labels)
-        # for class_name in self.classes:
-        #     correct_label_count = correct[class_name]
-        #     precision = correct_label_count / (correct_label_count + incorrect[class_name])
-        #     recall = correct_label_count / (correct_label_count + missing[class_name])
-        #     f1 = 2 * recall * precision / (recall + precision)
-        #
-        #     metrics.precision[class_name] = precision
-        #     metrics.recall[class_name] = recall
-        #     metrics.f1[class_name] = f1
-        #
-        # print(f'\nmetrics took {time.time() - start} seconds\n')
-        # return metrics
 
     def get_vocabulary(self):
         return [word for word in sorted(self.model.keys())]
@@ -507,6 +541,44 @@ def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testi
 
     with open(file_name, "w", encoding='utf-8') as file:
         file.writelines(lines)
+
+
+def bar_plot(fig, ax,  data, x_ticks, title, legend=True):
+    total_width = 0.8
+    single_width = 0.9
+
+    # todo conf figure size
+
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+
+    # Number of bars per group
+    n_bars = len(data)
+
+    # The width of a single bar
+    bar_width = total_width / n_bars
+
+    # List containing handles for the drawn bars, used for the legend
+    bars = []
+
+    # Iterate over all data
+    for i, (name, values) in enumerate(data.items()):
+        # The offset in x direction of that bar
+        x_offset = (i - n_bars / 2) * bar_width + bar_width / 2
+
+        # Draw a bar for every value of that type
+        for x, y in enumerate(values):
+            bar = ax.bar(x + x_offset, y, width=bar_width * single_width, color=colors[i % len(colors)])
+
+        # Add a handle to the last drawn bar, which we'll need for the legend
+        bars.append(bar[0])
+
+    if legend:
+        fig.legend(bars, data.keys(), loc='center left')
+
+    x_ticks.insert(0, None)
+    ax.set_xticklabels(x_ticks)
+    ax.set_title(title)
+    ax.set_xlabel('words remaining')
 
 
 if __name__ == "__main__":
