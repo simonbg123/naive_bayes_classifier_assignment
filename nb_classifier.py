@@ -10,6 +10,7 @@ import re
 import sys
 import math
 from matplotlib import pyplot as plt
+from naive_bayes_classifier import *
 
 """ Constants """
 DELTA = 0.5
@@ -17,6 +18,10 @@ DEFAULT_DATA_PATH = "hns_2018_2019.csv"
 
 
 def main():
+    """
+
+    :return:
+    """
 
     if len(sys.argv) == 1:
         csv_file_path = DEFAULT_DATA_PATH
@@ -114,8 +119,8 @@ def main():
     plt.close()
     title = f"Frequency experiments\nInitial vocabulary {initial_word_count}"
     fig, ax = plt.subplots(1, 2, figsize=(14, 5))
-    bar_plot(fig, ax[0], data_rem_infreq, x_ticks_infreq, "Removing Infrequent Words")
-    bar_plot(fig, ax[1], data_rem_freq, x_ticks_freq, "Removing Most Frequent Words")
+    multi_bar_plot(fig, ax[0], data_rem_infreq, x_ticks_infreq, "Removing Infrequent Words")
+    multi_bar_plot(fig, ax[1], data_rem_freq, x_ticks_freq, "Removing Most Frequent Words")
     fig.suptitle(title)
     plt.subplots_adjust(left=0.18)
     plt.show(block=False)
@@ -126,6 +131,11 @@ def main():
 
 
 def load_data(csv_file_path):
+    """
+
+    :param csv_file_path:
+    :return:
+    """
 
     training_set = []
     testing_set = []
@@ -153,6 +163,14 @@ def load_data(csv_file_path):
 
 
 def training_routine(training_set, output_file, delta, word_filter=None):
+    """
+
+    :param training_set:
+    :param output_file:
+    :param delta:
+    :param word_filter:
+    :return:
+    """
     # train model
     feature_vectors, correct_labels, removed_words = prepare_data(training_set, word_filter)
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, delta)
@@ -165,6 +183,16 @@ def training_routine(training_set, output_file, delta, word_filter=None):
 
 
 def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, output_file, t):
+    """
+
+    :param nb_classifier:
+    :param test_vectors:
+    :param test_correct_labels:
+    :param testing_set:
+    :param output_file:
+    :param t:
+    :return:
+    """
     # test model, print stats and output results to file
     nb_scores, nb_labels, metrics = nb_classifier.test(test_vectors, test_correct_labels)
     print_metrics(metrics)
@@ -174,7 +202,7 @@ def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_se
     plt.close()
     x_ticks = ['accuracy']
     for class_name in nb_classifier.classes:
-        x_ticks.append(f"F1 score: {class_name}")
+        x_ticks.append(f"{class_name}\nF1-score")
 
     data = [metrics.accuracy]
     for class_name in nb_classifier.classes:
@@ -191,6 +219,12 @@ def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_se
 
 
 def prepare_data(data_set, filter_func=None):
+    """
+
+    :param data_set:
+    :param filter_func:
+    :return:
+    """
 
     feature_vectors = []
     classifications = []
@@ -210,14 +244,10 @@ def prepare_data(data_set, filter_func=None):
 
 def tokenize_row(row, removed_words, filter_func=None):
     """
-    Returns a list of tokens from an entry.
-    It separates words separated by a forward slash,
-    removes punctuation at beginning and end of a token,
-    removes "'s" endings,
-    remove tokens which consist of a lonely punctuation sign, contain a digit or are an empty string.
+
     :param row:
     :param removed_words:
-    :param args: any number of additional filtering functions to apply to the tokenization process
+    :param filter_func:
     :return:
     """
     punctuation = string.punctuation
@@ -248,6 +278,11 @@ def tokenize_row(row, removed_words, filter_func=None):
 
 
 def word_filter_factory(stop_words):
+    """
+
+    :param stop_words:
+    :return:
+    """
 
     def func(tokens, removed_words):
         i = 0
@@ -267,6 +302,12 @@ def word_filter_factory(stop_words):
 
 
 def word_length_filter(tokens, removed_words):
+    """
+
+    :param tokens:
+    :param removed_words:
+    :return:
+    """
     i = 0
     n = len(tokens)
     while i < n:
@@ -281,143 +322,12 @@ def word_length_filter(tokens, removed_words):
     return tokens
 
 
-class NaiveBayesClassifier:
-
-    def __init__(self, feature_vectors, correct_labels, delta):
-        self.feature_vectors = feature_vectors
-        self.correct_labels = correct_labels
-        self.delta = delta
-
-        # train
-
-        self.classes = tuple({class_name for class_name in self.correct_labels})
-
-        # initialize all mappings to zero
-        self.model = {}
-        self.class_frequencies = {class_name: 0 for class_name in self.classes}
-        self.class_prior_likelihoods = {class_name: 0 for class_name in self.classes}
-        self.word_frequencies = {class_name: 0 for class_name in self.classes}
-
-        # add features to model and/or increment class frequencies for feature and overall;
-        for (vector, class_name) in zip(self.feature_vectors, self.correct_labels):
-
-            self.class_frequencies[class_name] += 1
-
-            for feature in vector:
-                if feature not in self.model:
-                    self.model[feature] = FeatureProperties(self.classes)
-                self.model[feature].frequencies[class_name] += 1
-                self.word_frequencies[class_name] += 1
-
-        # extract conditional probabilities
-        vocabulary_size = len(self.model)
-
-        for feature in self.model.keys():
-            feature_properties = self.model[feature]
-            for class_name in self.classes:
-                # building P( w_i | c )
-                cond_prob = feature_properties.frequencies[class_name] + self.delta
-                cond_prob = cond_prob / (self.word_frequencies[class_name] + vocabulary_size * self.delta)
-                feature_properties.likelihoods[class_name] = cond_prob
-
-        # get class priors
-        n_entries = len(correct_labels)
-        for class_name in self.classes:
-            self.class_prior_likelihoods[class_name] = (self.class_frequencies[class_name]) / n_entries
-
-    def classify(self, vectors):
-        nb_scores = []
-        nb_classes = []
-        for vector in vectors:
-            scores = []
-            for class_name in self.classes:
-                score = math.log(self.class_prior_likelihoods[class_name], 10)
-                for feature in vector:
-                    if feature in self.model:
-                        score += math.log(self.model[feature].likelihoods[class_name], 10)
-                scores.append(score)
-            nb_scores.append(scores)
-            most_likely_class = self.classes[scores.index(max(scores))]
-            nb_classes.append(most_likely_class)  # append most likely classification
-
-        return nb_scores, nb_classes
-
-    def test(self, test_vectors, test_correct_labels):
-        nb_scores, nb_labels = self.classify(test_vectors)
-        metrics = self.get_metrics(nb_labels, test_correct_labels)
-
-        return nb_scores, nb_labels, metrics
-
-    def get_metrics(self, nb_labels, correct_labels):
-
-        correct = {class_name: 0 for class_name in self.classes}
-        incorrect = {class_name: 0 for class_name in self.classes}
-        missing = {class_name: 0 for class_name in self.classes}
-
-        for (nb_label, correct_label) in zip(nb_labels, correct_labels):
-            if nb_label == correct_label:
-                correct[nb_label] += 1
-            else:
-                incorrect[nb_label] += 1
-                missing[correct_label] += 1
-
-        # computing metrics
-        accuracy = sum(correct.values()) / len(nb_labels)
-        precision = {}
-        recall = {}
-        f1 = {}
-
-        for class_name in self.classes:
-
-            correct_label_count = correct[class_name]
-
-            if incorrect[class_name] == 0 and missing[class_name] == 0:
-                p = 1
-                r = 1
-                f = 1
-            elif correct_label_count == 0:
-                p = 0
-                r = 0
-                f = 0
-            else:
-                p = correct_label_count / (correct_label_count + incorrect[class_name])
-                r = correct_label_count / (correct_label_count + missing[class_name])
-                f = 2 * p * r / (p + r)
-
-            precision[class_name] = p
-            recall[class_name] = r
-            f1[class_name] = f
-
-        return Metrics(accuracy, precision, recall, f1)
-
-    def get_vocabulary(self):
-        return [word for word in sorted(self.model.keys())]
-
-
-class FeatureProperties:
-    """
-    This class is used to hold classification data for each unique word
-    in a word dictionary
-    """
-    def __init__(self, classes):
-
-        # frequencies
-        self.frequencies = {class_name: 0 for class_name in classes}
-
-        # conditional probabilities
-        self.likelihoods = {class_name: 0 for class_name in classes}
-
-
-class Metrics:
-
-    def __init__(self, accuracy, precision, recall, f1):
-        self.accuracy = accuracy
-        self.precision = precision
-        self.recall = recall
-        self.f1 = f1
-
-
 def print_basic_model_stats(nb_classifier):
+    """
+    Prints out basic information about a model
+    :param nb_classifier: the NaiveBayesClassifier object
+    :return: None
+    """
     print(f"size of vocabulary: {len(nb_classifier.model)}")
     print(f'classification counts: {nb_classifier.class_frequencies}')
     print(f'words per class: {nb_classifier.word_frequencies}')
@@ -426,6 +336,11 @@ def print_basic_model_stats(nb_classifier):
 
 
 def print_metrics(metrics):
+    """
+    Prints out data of a Metrics object
+    :param metrics: Metrics object
+    :return: None
+    """
     print("TEST METRICS\n")
     print("Accuracy: {0:.4f}".format(metrics.accuracy))
     line = [" '{}': {:.4f},".format(class_name, value) for class_name, value in metrics.precision.items()]
@@ -437,8 +352,13 @@ def print_metrics(metrics):
     print()
 
 
-# todo write class name in output
 def output_model_to_file(classifier, file_name):
+    """
+    Formats and ouputs the model to file.
+    :param classifier: the NaiveBayesClassifier object
+    :param file_name: the output file name
+    :return: None
+    """
     # prepare model output file
     model_lines = []
     line_counter = 1
@@ -448,8 +368,9 @@ def output_model_to_file(classifier, file_name):
         line = [f'{line_counter}  {feature}']  # using a list to avoid multiple concatenations
         for class_name in classifier.classes:
             line.append(
-                f'  {feature_properties.frequencies[class_name]}  '
-                f'{"{0:.9f}".format(feature_properties.likelihoods[class_name])}')
+                f'  [{class_name}'
+                f'  {feature_properties.frequencies[class_name]}'
+                f'  {"{0:.9f}".format(feature_properties.likelihoods[class_name])}]')
         line.append('\n')
 
         model_lines.append(''.join(line))
@@ -462,8 +383,18 @@ def output_model_to_file(classifier, file_name):
         model_file.writelines(model_lines)
 
 
-# todo add classname or otherwise show order
 def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testing_set, classes, file_name):
+    """
+    Outputs results of testing a model to file
+    :param nb_scores: list returned by the NaiveBayesClassifier, which contains
+    probabilities of each class for each instance
+    :param nb_labels: list of labels returned by the NaiveBayesClassifier
+    :param test_correct_labels: list of correct labels of the testing sample
+    :param testing_set: list of vectors of features which was originally fed to the classifier
+    :param classes: the list of the classes of the classifier
+    :param file_name: output file name
+    :return: None
+    """
     lines = []
     line_counter = 1
 
@@ -473,8 +404,8 @@ def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testi
         right_wrong = "right" if nb_label == correct_label else "wrong"
 
         line = [f'{line_counter}  {row[2]}  {nb_label}']  # using a list to avoid multiple concatenations
-        for i in range(len(classes)):
-            line.append(f'  {"{0:.6f}".format(nb_score_vector[i])}')
+        for i, class_name in enumerate(classes):
+            line.append(f'  [{class_name} {"{0:.6f}".format(nb_score_vector[i])}]')
         line.append(f'  {correct_label}  {right_wrong}\n')
         lines.append(''.join(line))
         line_counter += 1
@@ -486,6 +417,16 @@ def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testi
 
 
 def infrequent_words_experiment(freq_list, nb_classifier, test_vectors, test_correct_labels):
+    """
+    Encapsulates the experiment of removing sequentially the words with the least frequency,
+    according to a list of frequency values, and return the combined results of the experiment.
+    :param freq_list: list of frequencies for which we remove words in the model
+    :param nb_classifier: the NaiveBayesClassifier
+    :param test_vectors: the vectors containing the test inputs
+    :param test_correct_labels: the correct labels for the test inputs
+    :return: accuracy and F1-score for each class, for each frequency experiment, the list of ticks to be used
+    to label the x-axis on a plot.
+    """
 
     data_rem_infreq = {'accuracy': []}  # to stock metrics for each round of removal
     for class_name in nb_classifier.classes:
@@ -518,6 +459,16 @@ def infrequent_words_experiment(freq_list, nb_classifier, test_vectors, test_cor
 
 
 def frequent_words_experiment(freq_list, nb_classifier, test_vectors, test_correct_labels):
+    """
+    Encapsulates the experiment of removing sequentially the most frequent words,
+    according to a list of frequency percentages, and return the combined results of the experiment.
+    :param freq_list: list of frequencies for which we remove words in the model
+    :param nb_classifier: the NaiveBayesClassifier
+    :param test_vectors: the vectors containing the test inputs
+    :param test_correct_labels: the correct labels for the test inputs
+    :return: accuracy and F1-score for each class, for each frequency experiment, the list of ticks to be used
+    to label the x-axis on a plot.
+    """
 
     data_rem_freq = {'accuracy': []}  # to stock metrics for each round of removal
     for class_name in nb_classifier.classes:
@@ -550,12 +501,22 @@ def frequent_words_experiment(freq_list, nb_classifier, test_vectors, test_corre
     return data_rem_freq, x_ticks_freq
 
 
-def bar_plot(fig, ax,  data, x_ticks, title, legend=True):
+def multi_bar_plot(fig, ax, data, x_ticks, title, legend=True):
+    """
+    Builds a multi-bar graph, multiple data points
+
+    :param fig:
+    :param ax:
+    :param data: a dictionary mapping the names of each bar, to a list of the values
+    for all the data points
+    :param x_ticks: the labels for each multi-bar data point
+    :param title:
+    :param legend: indicates whether to add or legend for the different bars for each data point
+    :return: None
+    """
 
     total_width = 0.8
     single_width = 0.9
-
-    # todo conf figure size
 
     colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
 
