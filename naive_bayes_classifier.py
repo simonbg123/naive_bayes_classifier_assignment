@@ -1,3 +1,10 @@
+# -------------------------------------------------------
+# Assignment 2
+# Written by Simon Brillant-Giroux, 40089110
+# For COMP 472 Section ABIX – Summer 2020
+# --------------------------------------------------------
+
+
 import math
 
 

@@ -4,11 +4,13 @@
 # For COMP 472 Section ABIX – Summer 2020
 # --------------------------------------------------------
 
+# todo read sign expectations of originality
+# todo finish documentation and README file
+
 import csv
 import string
 import re
 import sys
-import math
 from matplotlib import pyplot as plt
 from naive_bayes_classifier import *
 
@@ -58,6 +60,10 @@ def main():
     # TASK 2
     # prepare testing data - will also be used for experiments
     test_vectors, test_correct_labels, _ = prepare_data(testing_set)
+
+    if not testing_set:
+        print("\nNo testing set was supplied. Program will exit.\nBye!\n")
+        return
 
     testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, baseline_output_file, plot_title)
 
