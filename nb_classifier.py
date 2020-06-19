@@ -40,7 +40,7 @@ def main():
     training_set, testing_set = load_data(csv_file_path)
 
     # train model
-    feature_vectors, correct_labels, removed_words = prepare_data(training_set)
+    feature_vectors, correct_labels, removed_words = prepare_data(training_set, None, True)
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
 
     # print model stats and output model to file
@@ -228,7 +228,7 @@ def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_se
     plt.show(block=False)
 
 
-def prepare_data(data_set, filter_func=None):
+def prepare_data(data_set, filter_func=None, make_remove_list=False):
     """
 
     :param remove_list:
@@ -247,13 +247,13 @@ def prepare_data(data_set, filter_func=None):
         class_name = row[3].strip()  # retrieve class name
         classifications.append(class_name)
 
-        tokens = tokenize_row(row, removed_words, filter_func)
+        tokens = tokenize_row(row, removed_words, filter_func, make_remove_list)
         feature_vectors.append(tokens)
 
     return feature_vectors, classifications, removed_words
 
 
-def tokenize_row(row, removed_words, filter_func):
+def tokenize_row(row, removed_words, filter_func, make_remove_list):
     """
 
     :param row:
@@ -268,24 +268,28 @@ def tokenize_row(row, removed_words, filter_func):
     tokens = [token.strip(punctuation).lower() for token in tokens if token not in punctuation]
     tokens = [re.sub(r'[\'’]s$', '', token) for token in tokens]  # removing "'s" endings
     # remove words with digits and empty strings
-    i = 0
-    n = len(tokens)
-    while i < n:
-        token = tokens[i]
-        if not token:
-            del tokens[i]
-            n -= 1
-        elif re.match(r'.*\d.*', token):
-            removed_words.append(token)
-            del tokens[i]
-            n -= 1
-        else:
-            i += 1
+    if not make_remove_list:
+        tokens = [token for token in tokens if token and not re.match(r'.*\d.*', token)]
+        return tokens
+    else:
+        i = 0
+        n = len(tokens)
+        while i < n:
+            token = tokens[i]
+            if not token:
+                del tokens[i]
+                n -= 1
+            elif re.match(r'.*\d.*', token):
+                removed_words.append(token)
+                del tokens[i]
+                n -= 1
+            else:
+                i += 1
 
-    if filter_func:
-        tokens = filter_func(tokens)
+        if filter_func:
+            tokens = filter_func(tokens)
 
-    return tokens
+        return tokens
 
 
 def word_filter_factory(stop_words):
@@ -296,23 +300,8 @@ def word_filter_factory(stop_words):
     """
 
     def func(tokens):
-        new_tokens = []
-        for token in tokens:
-            if token in stop_words:
-                continue
-            new_tokens.append(token)
-        # if stop_words:
-        #     i = 0
-        #     n = len(tokens)
-        #     while i < n:
-        #         token = tokens[i]
-        #         if token in stop_words:
-        #             del tokens[i]
-        #             n -= 1
-        #         else:
-        #             i += 1
 
-        return new_tokens
+        return [w for w in tokens if w not in stop_words]
 
     return func
 
@@ -324,17 +313,8 @@ def word_length_filter(tokens):
     :param removed_words:
     :return:
     """
-    i = 0
-    n = len(tokens)
-    while i < n:
-        token = tokens[i]
-        if not 2 < len(token) < 9:
-            del tokens[i]
-            n -= 1
-        else:
-            i += 1
 
-    return tokens
+    return [w for w in tokens if not 2 < len(w) < 9]
 
 
 def print_basic_model_stats(nb_classifier):
@@ -465,10 +445,8 @@ def infrequent_words_experiment(freq_list, nb_classifier, training_set, delta, t
 
         # get a word filter for excluded words and train a new model
         word_filter = word_filter_factory(remove)
-        print(f'before: {time.time()}')
 
         feature_vectors, correct_labels, _ = prepare_data(training_set, word_filter)
-        print(f'after: {time.time()}')
 
         nb_temp_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, delta)
         _, _, metrics = nb_temp_classifier.test(test_vectors, test_correct_labels)
