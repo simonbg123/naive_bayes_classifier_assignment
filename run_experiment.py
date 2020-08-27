@@ -4,26 +4,27 @@
 # For COMP 472 Section ABIX – Summer 2020
 # --------------------------------------------------------
 
-# todo read sign expectations of originality
-# todo finish documentation and README file
-# todo show values in bar charts
 
 import csv
 import string
 import re
 import sys
-import time
+import os
 from matplotlib import pyplot as plt
 from naive_bayes_classifier import *
 
 """ Constants """
 DELTA = 0.5
 DEFAULT_DATA_PATH = "hns_2018_2019.csv"
+OUTPUT_FOLDER = "output/"
+if not os.path.exists(OUTPUT_FOLDER):
+    os.makedirs(OUTPUT_FOLDER)
 
 
 def main():
     """
-
+    Executes all tasks of Assignment 2.
+    Uses the naive_bayes_classifier module.
     :return:
     """
 
@@ -35,8 +36,10 @@ def main():
         print("Usage: nb_classifier [file_path]")
         return
 
-    # TASK 1
-    # load data
+    """
+    TASK 1
+    load data
+    """
     training_set, testing_set = load_data(csv_file_path)
 
     # train model
@@ -45,8 +48,8 @@ def main():
 
     # print model stats and output model to file
     print("\n## BASELINE MODEL ##\n")
-    model_output_file = "model-2018"
-    baseline_output_file = "baseline-result"
+    model_output_file = OUTPUT_FOLDER + "model-2018"
+    baseline_output_file = OUTPUT_FOLDER + "baseline-result"
     plot_title = "BASELINE MODEL"
 
     print_basic_model_stats(nb_classifier)
@@ -54,13 +57,15 @@ def main():
 
     # output vocabulary, removed-words files
     vocabulary = nb_classifier.get_vocabulary()
-    with open("vocabulary.txt", "w", encoding='utf-8') as voc_file, \
-            open("removed_words.txt", "w", encoding='utf-8') as rem_file:
+    with open(OUTPUT_FOLDER + "vocabulary.txt", "w", encoding='utf-8') as voc_file, \
+            open(OUTPUT_FOLDER + "removed_words.txt", "w", encoding='utf-8') as rem_file:
         voc_file.write('\n'.join(vocabulary))
         rem_file.write('\n'.join(removed_words))
 
-    # TASK 2
-    # prepare testing data - will also be used for experiments
+    """
+    TASK 2
+    prepare testing data - will also be used for experiments
+    """
     test_vectors, test_correct_labels, _ = prepare_data(testing_set)
 
     if not testing_set:
@@ -75,11 +80,12 @@ def main():
     """
 
     """Experiment 1: stop-word filtering"""
+
     input("PRESS ENTER to continue with stop-word experiment\n")
     print("\n## STOP-WORD MODEL ##\n")
 
-    model_output_file = "stopword-model"
-    result_output_file = "stopword-result"
+    model_output_file = OUTPUT_FOLDER + "stopword-model"
+    result_output_file = OUTPUT_FOLDER + "stopword-result"
     plot_title = "STOP-WORD TEST"
 
     with open("stopwords.txt", "r", encoding='utf-8') as sw_file:
@@ -94,22 +100,27 @@ def main():
 
     testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, result_output_file, plot_title)
 
-    # Experiment 2: word lengths
+    """Experiment 2: word lengths"""
+
     input("PRESS ENTER to continue with word-length experiment\n")
     print("\n## WORD-LENGTH MODEL ##\n")
 
-    model_output_file = "wordlength-model"
-    result_output_file = "wordlength-result"
+    model_output_file = OUTPUT_FOLDER + "wordlength-model"
+    result_output_file = OUTPUT_FOLDER + "wordlength-result"
     plot_title = "WORD-LENGTH TEST"
 
     nb_classifier = training_routine(training_set, model_output_file, DELTA, word_length_filter)
     testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, result_output_file,plot_title)
 
-    """Experiment 3: frequency experiments"""
+    """
+    Experiment 3: frequency experiments
+    """
+
     input("PRESS ENTER to continue with frequency experiments\n")
     print("Please wait: removing words and retraining the model 10 consecutive times...\n")
 
     """Remove infrequent words experiment"""
+
     # get a fresh model to serve as baseline to determine the frequency of words
     feature_vectors, correct_labels, _ = prepare_data(training_set)
     nb_classifier = NaiveBayesClassifier(feature_vectors, correct_labels, DELTA)
@@ -143,9 +154,11 @@ def main():
 
 def load_data(csv_file_path):
     """
-
+    Parses csv file.
+    Separates training data and testing data according
+    to the assignment guidelines (using year 2018 for training, 2019 for testing)
     :param csv_file_path:
-    :return:
+    :return: None
     """
 
     training_set = []
@@ -175,12 +188,13 @@ def load_data(csv_file_path):
 
 def training_routine(training_set, output_file, delta, word_filter=None):
     """
-
-    :param remove_list:
-    :param training_set:
-    :param output_file:
-    :param delta:
-    :param word_filter:
+    Encapsulates a series of operations repeated throughout many tasks,
+    such as the training of the model, the outputting of basic model statistics
+    to the terminal, and the outputting of the model to file.
+    :param training_set: the set of rows from the csv file loaded to memory
+    :param output_file: the path to the model output_file
+    :param delta: the delta value used for training
+    :param word_filter: a filter function to apply to the training set
     :return:
     """
     # train model
@@ -194,15 +208,18 @@ def training_routine(training_set, output_file, delta, word_filter=None):
     return nb_classifier
 
 
-def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, output_file, t):
+def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_set, output_file, title):
     """
-
-    :param nb_classifier:
-    :param test_vectors:
-    :param test_correct_labels:
-    :param testing_set:
-    :param output_file:
-    :param t:
+    Encapsulates a series of operations repeated throughout many tasks,
+    such as the testing of the model, the outputting of basic testing statistics to the terminal,
+    the outputting of the testing results to files,
+    and the plotting of the testing results.
+    :param nb_classifier: a reference to an instance of a NaiveBayesClassifier
+    :param test_vectors: the testing feature vectors
+    :param test_correct_labels: the correct labels for each testing feature vector
+    :param testing_set: the testing data set rows from the csv file
+    :param output_file: the path to the output file for test results
+    :param title: the title of the plot
     :return:
     """
     # test model, print stats and output results to file
@@ -226,17 +243,21 @@ def testing_routine(nb_classifier, test_vectors, test_correct_labels, testing_se
     for i, v in enumerate(data):
         ax.text(i - 0.15, v + 0.01, "{:.4f}".format(v), fontweight='bold')
 
-    ax.set_title(t)
+    ax.set_title(title)
     plt.show(block=False)
 
 
 def prepare_data(data_set, filter_func=None, make_remove_list=False):
     """
-
-    :param remove_list:
-    :param data_set:
-    :param filter_func:
-    :return:
+    Transforms raw csv columns loaded to memory into feature vectors.
+    Applies basic transformation consisting in the removal of words containing
+    digits, the trimming of punctuation symbols, as well as any other filter function
+    supplied as argument
+    :param make_remove_list: whether updating a remove_list is needed
+    :param data_set: the csv rows loaded to memory
+    :param filter_func: a filter function that takes a list of tokens and returns a filtered list.
+    :return: the feature vectors, their associated labels, and a remove-word list, which may be empty, depending
+    on the value of the make_remove_list argument
     """
 
     feature_vectors = []
@@ -257,11 +278,15 @@ def prepare_data(data_set, filter_func=None, make_remove_list=False):
 
 def tokenize_row(row, removed_words, filter_func, make_remove_list):
     """
-
-    :param row:
+    Helper method to tokenize a specific row of csv data.
+    Applies basic transformation consisting in the removal of words containing
+    digits, the trimming of punctuation symbols, as well as any other filter function
+    supplied as argument
+    :param make_remove_list: whether or not the removed_list should be updated
+    :param row: a row of csv data
     :param removed_words: list of removed words
-    :param filter_func:
-    :return:
+    :param filter_func: a function applying filter to a list of token
+    :return: a new list of filtered tokens
     """
     punctuation = string.punctuation
     punctuation += "“”‘’«"
@@ -295,9 +320,9 @@ def tokenize_row(row, removed_words, filter_func, make_remove_list):
 
 def word_filter_factory(stop_words):
     """
-
-    :param stop_words:
-    :return:
+    Returns a filter function for a given list of stop-words.
+    :param stop_words: a list of stop-words
+    :return: a function applying the stop-word list to a list of token
     """
 
     def func(tokens):
@@ -309,13 +334,14 @@ def word_filter_factory(stop_words):
 
 def word_length_filter(tokens):
     """
-
+    A specfic filter function to remove words according to their length,
+    for task 3.
     :param tokens:
     :param removed_words:
     :return:
     """
 
-    return [w for w in tokens if not 2 < len(w) < 9]
+    return [w for w in tokens if 2 < len(w) < 9]
 
 
 def print_basic_model_stats(nb_classifier):
@@ -326,7 +352,7 @@ def print_basic_model_stats(nb_classifier):
     """
     print(f"size of vocabulary: {len(nb_classifier.model)}")
     print(f'classification counts: {nb_classifier.class_frequencies}')
-    print(f'words per class: {nb_classifier.word_frequencies}')
+    print(f'words per class: {nb_classifier.word_totals}')
     print(f'Priors: {nb_classifier.class_prior_likelihoods}')
     print()
 
@@ -357,16 +383,22 @@ def output_model_to_file(classifier, file_name):
     """
     # prepare model output file
     model_lines = []
-    line_counter = 1
+    line_counter = 0
+    # legend: order of classes
+    # this is not hard-coded, it depends on the order of processing of the training data
+    model_lines.append(f"{line_counter}  Order of classes:")
+    for class_name in classifier.classes:
+        model_lines.append(f'  {class_name}')
+    model_lines.append('\n')
+    line_counter += 1
 
     for feature, feature_properties in sorted(classifier.model.items()):
 
         line = [f'{line_counter}  {feature}']  # using a list to avoid multiple concatenations
         for class_name in classifier.classes:
             line.append(
-                f'  [{class_name}'
                 f'  {feature_properties.frequencies[class_name]}'
-                f'  {"{0:.9f}".format(feature_properties.likelihoods[class_name])}]')
+                f'  {"{0:.9f}".format(feature_properties.likelihoods[class_name])}')
         line.append('\n')
 
         model_lines.append(''.join(line))
@@ -392,7 +424,15 @@ def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testi
     :return: None
     """
     lines = []
-    line_counter = 1
+    line_counter = 0
+
+    # legend: order of classes
+    # this is not hard-coded, it depends on the order of processing of the training data
+    lines.append(f"{line_counter}  Order of classes:")
+    for class_name in classes:
+        lines.append(f'  {class_name}')
+    lines.append('\n')
+    line_counter += 1
 
     # outputting results to file
     for (nb_score_vector, nb_label, correct_label, row) in zip(nb_scores, nb_labels, test_correct_labels, testing_set):
@@ -401,7 +441,7 @@ def output_test_results_to_file(nb_scores, nb_labels, test_correct_labels, testi
 
         line = [f'{line_counter}  {row[2]}  {nb_label}']  # using a list to avoid multiple concatenations
         for i, class_name in enumerate(classes):
-            line.append(f'  [{class_name} {"{0:.6f}".format(nb_score_vector[i])}]')
+            line.append(f'  {"{0:.6f}".format(nb_score_vector[i])}')
         line.append(f'  {correct_label}  {right_wrong}\n')
         lines.append(''.join(line))
         line_counter += 1

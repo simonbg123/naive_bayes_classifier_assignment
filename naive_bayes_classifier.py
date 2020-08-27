@@ -10,15 +10,18 @@ import math
 
 class NaiveBayesClassifier:
     """
-
+    A multinomial Naive Bayes Classifier that takes feature vector as input as well
+    as the corresponding classified labels.
+    This will return an object from this class, which can e used to classify new feature vectors
+    or conduct tests on labelled feature vectors.
     """
 
     def __init__(self, feature_vectors, correct_labels, delta):
         """
 
-        :param feature_vectors:
-        :param correct_labels:
-        :param delta:
+        :param feature_vectors: a list of feature vectors
+        :param correct_labels: labels corresponding to the feature vectors
+        :param delta: the delta to be applied for smoothing purposes
         """
         self.feature_vectors = feature_vectors
         self.correct_labels = correct_labels
@@ -28,13 +31,13 @@ class NaiveBayesClassifier:
 
         self.classes = tuple({class_name for class_name in self.correct_labels})
 
-        # initialize all mappings to zero
+        # initialize class frequencies and likelihood
         self.model = {}
         self.class_frequencies = {class_name: 0 for class_name in self.classes}
         self.class_prior_likelihoods = {class_name: 0 for class_name in self.classes}
-        self.word_frequencies = {class_name: 0 for class_name in self.classes}
+        self.word_totals = {class_name: 0 for class_name in self.classes}
 
-        # add features to model and/or increment class frequencies for feature and overall;
+        # add features to model and/or increment class word totals for feature and overall;
         for (vector, class_name) in zip(self.feature_vectors, self.correct_labels):
 
             self.class_frequencies[class_name] += 1
@@ -43,17 +46,18 @@ class NaiveBayesClassifier:
                 if feature not in self.model:
                     self.model[feature] = FeatureProperties(self.classes)
                 self.model[feature].frequencies[class_name] += 1
-                self.word_frequencies[class_name] += 1
+                self.word_totals[class_name] += 1
 
         # extract conditional probabilities
         vocabulary_size = len(self.model)
 
+        # getting the conditional probabilities
         for feature in self.model.keys():
             feature_properties = self.model[feature]
             for class_name in self.classes:
                 # building P( w_i | c )
                 cond_prob = feature_properties.frequencies[class_name] + self.delta
-                cond_prob = cond_prob / (self.word_frequencies[class_name] + vocabulary_size * self.delta)
+                cond_prob = cond_prob / (self.word_totals[class_name] + vocabulary_size * self.delta)
                 feature_properties.likelihoods[class_name] = cond_prob
 
         # get class priors
@@ -63,9 +67,9 @@ class NaiveBayesClassifier:
 
     def classify(self, vectors):
         """
-
+        Classifies input vectors with the model represented by an instance of this class,
         :param vectors:
-        :return:
+        :return: score vectors for every class of each instance, and a list of the most likely labels for each instance.
         """
         nb_scores = []
         nb_classes = []
@@ -85,10 +89,10 @@ class NaiveBayesClassifier:
 
     def test(self, test_vectors, test_correct_labels):
         """
-
-        :param test_vectors:
-        :param test_correct_labels:
-        :return:
+        Classifies test feature vectors and returns a Metrics object
+        :param test_vectors: feature vectors of the testing data
+        :param test_correct_labels: correct labels for the testing data
+        :return: a Metrics object
         """
         nb_scores, nb_labels = self.classify(test_vectors)
         metrics = self.get_metrics(nb_labels, test_correct_labels)
@@ -97,10 +101,12 @@ class NaiveBayesClassifier:
 
     def get_metrics(self, nb_labels, correct_labels):
         """
-
-        :param nb_labels:
-        :param correct_labels:
-        :return:
+        Returns a Metrics object based on the labels returned by the classify() method,
+        and a list of the correct_labels.
+        :param nb_labels: labels determined by this model
+        :param correct_labels: pre-classified labels that we are testing against. Should not contain labels that are not
+        recognized by the model (i.e. that were not present in the training set).
+        :return: a Metrics object
         """
 
         correct = {class_name: 0 for class_name in self.classes}
@@ -145,7 +151,7 @@ class NaiveBayesClassifier:
 
     def get_vocabulary(self):
         """
-
+        Returns a list of the vocabulary used by the model.
         :return:
         """
         return [word for word in sorted(self.model.keys())]
@@ -154,7 +160,7 @@ class NaiveBayesClassifier:
 class FeatureProperties:
     """
     This class is used to hold overall frequency and
-    conditional probabilities with respect to each class
+    conditional probabilities with respect to each class,
     for each feature key in the model
     """
     def __init__(self, classes):
