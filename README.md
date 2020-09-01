@@ -16,7 +16,7 @@ naive_bayes_classifier
 - naive_bayes_classifier.py
 - csv sample input file: hns_2018_2019.csv
 - sample_output/    
-	>*This includes all output files from an example run on the assignment data. Running the program will produce new output files which will be added to an "output*
+	>*This includes all output files from an example run on the assignment data.*
 
 ## Usage:
 
